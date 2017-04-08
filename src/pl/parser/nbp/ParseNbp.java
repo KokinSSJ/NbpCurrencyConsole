@@ -10,27 +10,27 @@ import java.util.List;
 
 public class ParseNbp {
 	
-	private final static String nbpSite = "http://www.nbp.pl/kursy/xml/";
+	final static String nbpSite = "http://www.nbp.pl/kursy/xml/";
 	
 	private List<String> list = new LinkedList<>();//TODO mo¿ê tutaj dac i potem zwrociæ przez geter??
 	
 	public static List<String>  getDirSet(LocalDate dateStart, LocalDate dateStop){
 		int year = dateStart.getYear();
-		List<String> dirSet = new LinkedList<>(); 
+		List<String> dirList = new LinkedList<>(); 
 		//do for all years
 		while(year<=dateStop.getYear()){
 			String dirFileName = getDirName(year);
 			System.out.println("check getDirSet while" + dirFileName);
-			dirSet.addAll(getDirSet(dateStart, dateStop, dirFileName));
+			dirList.addAll(getDirSet(dateStart, dateStop, dirFileName));
 			year++;
 		}
-		return dirSet;
+		return dirList;
 	}
 	
 	//TODO -> work with efficiency -> many times openConnection!
 	//getValue -> get selling value for specific date
 	private static List<String> getDirSet(LocalDate dateStart, LocalDate dateStop, String dirFileName){
-		List<String> dirSet = new LinkedList<>();
+		List<String> dirList = new LinkedList<>();
 //		System.out.println("check getSellingRate");
 		URL url = null;
 		BufferedReader bReader = null;
@@ -52,36 +52,35 @@ public class ParseNbp {
 						continue;
 					}
 				}
+//				System.out.println(line);
 				if(isNecessarySave(dateStart, dateStop, line)){
-					
-					dirSet.add(line);
+					dirList.add(line);
 					check++;
 				}
-				
-				
 			}
-			
-//			System.out.println("check1");
+
 			System.out.println("check  value " + check);
-			return dirSet;
+			return dirList;
 			
 		} catch(Exception ex){
 			System.out.println(ex.getMessage());
 		}
 		finally {
-			
-			try {
-				bReader.close();
-				return dirSet;
-			} catch (IOException e) {
-				e.printStackTrace();
-				
+			if(bReader!=null){
+				try {
+					bReader.close();
+					return dirList;
+				} catch (IOException e) {
+					e.printStackTrace();				
+				}
 			}
 			
 		}
-		return dirSet;
+		return dirList;
 		
 	}
+	
+	
 	//return txt file name, which consist xml file names
 	//for current year -> dir.txt 
 	//for previous years -> dir+Year+.txt ->e.g. dir2002.txt
@@ -104,14 +103,6 @@ public class ParseNbp {
 				return true;
 			}
 		} 
-//		if(string.matches(".*[c+].*")){
-//			
-//			if (isNecessaryDate(dateStart, dateStop, string.substring(string.indexOf("c")))) {
-//				return true;
-//			}
-//		}
-		
-		
 		return false;
 	}
 

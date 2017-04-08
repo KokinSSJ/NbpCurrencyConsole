@@ -1,0 +1,10 @@
+.classpath
+.project
+.settings/
+target/
+/build/
+
+.README.md.html
+bin/
+src/AlexaSEO.java
+src/TestMainClass.java

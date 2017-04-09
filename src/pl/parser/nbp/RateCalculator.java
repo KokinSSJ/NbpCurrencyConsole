@@ -21,8 +21,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 import org.xml.sax.helpers.DefaultHandler;
-
-
+import org.omg.CosNaming._BindingIteratorImplBase;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -68,7 +67,8 @@ public class RateCalculator {
 			
 //			dBuilder.
 			stop = System.currentTimeMillis();
-			
+			long time1 = stop-start;
+			System.out.println("odczyt danych: " + time1);
 			//////////////////////////////
 //			SAXParserFactory factory = SAXParserFactory.newInstance();
 //			  factory.setValidating(false);
@@ -88,70 +88,131 @@ public class RateCalculator {
 //			System.out.println(parser);
 			/////////////////////
 			/////---------------
+			start = System.currentTimeMillis();
 			XMLInputFactory factory = XMLInputFactory.newInstance();
 		    XMLStreamReader reader = factory.createXMLStreamReader(url.openStream());
 			
 		    Position position = null;
 		    String content = ""; 
-		    while(reader.hasNext()){
-		    	
-		    	int event = reader.next();
-		    	
-		    	switch (event) {
-				case XMLStreamConstants.START_ELEMENT:
-					if("pozycja".equals(reader.getLocalName())){
-						position = new Position();
-					}
-					
-					
-					break;
-				case XMLStreamConstants.CHARACTERS:
-			          content = reader.getText().trim();
-			          break;
-				case XMLStreamConstants.END_ELEMENT:
-			          switch(reader.getLocalName()){
-			            case "kod_waluty":
-//			            	System.out.println("start kod waluty");
-//			            	System.out.println(currency);
-			            	System.out.println(reader.getLocalName());
-//			            	System.out.println(content);
-			            	if(content.equals(currency.toString())){
-								position.setCurrency(currency);
-								System.out.println("waluta ok");
-							}
-							else {
-								continue;
-							}
-			              break;
-			            case "kurs_kupna":
-			            	if(position.getCurrency()!=null){
-			            		 position.setBuyRate(content);
-					              buyList2.add(Double.parseDouble(content.replace(",", ".")));
-			            	}
-			             
-			              break;
-			            case "kurs_sprzedazy":
-			            	if(position.getCurrency()!=null){
-			              position.setSellRate(content);
-			              sellList2.add(Double.parseDouble(content.replace(",", ".")));
-			              System.out.println("content" + content);
-			            	}
-			              break;
-			            
-			          }
-			          break;
-				}
-		    }
-
+//		    while(reader.hasNext()){
+//		    	
+//		    	int event = reader.next();
+//		    	
+//		    	switch (event) {
+//				case XMLStreamConstants.START_ELEMENT:
+//					if("pozycja".equals(reader.getLocalName())){
+//						position = new Position();
+//					}
+//					
+//					
+//					break;
+//				case XMLStreamConstants.CHARACTERS:
+//			          content = reader.getText().trim();
+//			          break;
+//				case XMLStreamConstants.END_ELEMENT:
+//			          switch(reader.getLocalName()){
+//			            case "kod_waluty":
+////			            	System.out.println("start kod waluty");
+////			            	System.out.println(currency);
+//			            	System.out.println(reader.getLocalName());
+////			            	System.out.println(content);
+//			            	if(content.equals(currency.toString())){
+//								position.setCurrency(currency);
+//								System.out.println("waluta ok");
+//							}
+//							else {
+//								continue;
+//							}
+//			              break;
+//			            case "kurs_kupna":
+//			            	if(position.getCurrency()!=null){
+//			            		 position.setBuyRate(content);
+//					              buyList2.add(Double.parseDouble(content.replace(",", ".")));
+//			            	}
+//			             
+//			              break;
+//			            case "kurs_sprzedazy":
+//			            	if(position.getCurrency()!=null){
+//			              position.setSellRate(content);
+//			              sellList2.add(Double.parseDouble(content.replace(",", ".")));
+//			              System.out.println("content" + content);
+//			            	}
+//			              break;
+//			            
+//			          }
+//			          break;
+//				}
+//		    }
+		    
+		    	outerloop:
+		    	while(reader.hasNext()){
+		    		
+		    		int event = reader.next();
+		    		
+		    		if(XMLStreamConstants.START_ELEMENT == event && "pozycja".equals(reader.getLocalName().toLowerCase())){
+		    			Double buyTemp = null; //zeruj
+				    	Double sellTemp = null;
+				    	Currency currTemp = null;
+		    				do{
+		    					event=reader.next();
+		    					
+		    					if(XMLStreamConstants.START_ELEMENT==event && "kod_waluty".equals(reader.getLocalName().toLowerCase())){
+		    						event=reader.next();
+		    						if(XMLStreamConstants.CHARACTERS==event){
+			    						content = reader.getText().trim();
+			    						if(content.equals(currency.name())){
+			    							System.out.println("currency dziala");
+			    							currTemp = Currency.valueOf(content);
+//			    							System.out.println(currTemp);
+			    						}
+			    					}
+		    					}
+		    					else if(XMLStreamConstants.START_ELEMENT==event && "kurs_kupna".equals(reader.getLocalName().toLowerCase())){
+		    						event=reader.next();
+		    						if(XMLStreamConstants.CHARACTERS==event){
+			    						content = reader.getText().trim();
+			    						buyTemp = Double.parseDouble(content.replace(",", "."));
+			    					}
+		    					}
+		    					else if(XMLStreamConstants.START_ELEMENT==event && "kurs_sprzedazy".equals(reader.getLocalName().toLowerCase())){
+		    						event=reader.next();
+		    						if(XMLStreamConstants.CHARACTERS==event){
+			    						content = reader.getText().trim();
+			    						sellTemp = Double.parseDouble(content.replace(",", "."));
+//			    						System.out.println(sellTemp);
+			    					}
+		    					}
+		    					
+		    					else if(XMLStreamConstants.END_ELEMENT == event && "pozycja".equals(reader.getLocalName().toLowerCase())){
+		    						 buyTemp = null; //zeruj
+		    				    	 sellTemp = null;
+		    				    	 currTemp = null;
+		    						break;
+		    					}
+		    					if(buyTemp!=null && sellTemp!=null &&currTemp!=null){
+//		    						System.out.println(currTemp);
+		    						buyList2.add(buyTemp);
+		    						sellList2.add(sellTemp);
+		    						break outerloop;
+		    						
+		    					}
+		    				}while(reader.hasNext());
+		    			
+		    		}
+		    		else{
+		    			continue;
+		    		}
+		    	}
 		    
 			
-			
+		    stop = System.currentTimeMillis();
+			time1 = stop-start;
+			System.out.println("odczyt danychz MOJ: " + time1);
 			/////-----------------
 			
 			NodeList nodeList = document.getElementsByTagName("kod_waluty");
 			
-			long time1 = stop-start;
-			System.out.println("odczyt danych: " + time1);
+			
 			start = System.currentTimeMillis();
 			
 			

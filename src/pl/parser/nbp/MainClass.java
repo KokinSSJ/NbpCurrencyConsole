@@ -34,7 +34,11 @@ public class MainClass {
 		long time2 = stop-start;
 		rateCalculator.getAverage();
 		System.out.println(rateCalculator.getBuyList());
+		System.out.println(rateCalculator.getBuyList2());
 		System.out.println(rateCalculator.getSellList());
+		System.out.println(rateCalculator.getSellList2());
+		
+
 //		RateCalculator.readValues(dirList.get(0), currency);
 //		RateCalculator.readValues("c034z020218", currency);
 		

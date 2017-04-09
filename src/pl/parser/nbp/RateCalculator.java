@@ -7,6 +7,21 @@ import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.parsers.SAXParser;
+
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+
+import org.xml.sax.SAXException;
+
+import org.xml.sax.helpers.DefaultHandler;
+
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -18,8 +33,8 @@ public class RateCalculator {
 	
 	private  List<Double> buyList = new LinkedList<>();
 	private  List<Double> sellList = new LinkedList<>();
-	
-	
+	private  List<Double> buyList2 = new LinkedList<>();
+	private  List<Double> sellList2 = new LinkedList<>();
 	public void readAll (List<String> xmlList, Currency currency){
 		
 		for(String s: xmlList){
@@ -50,7 +65,89 @@ public class RateCalculator {
 			DocumentBuilder dBuilder = dbf.newDocumentBuilder();
 			start = System.currentTimeMillis();
 			Document document = dBuilder.parse(url.openStream(), "UTF-8"); // very time consuming!!!
+			
+//			dBuilder.
 			stop = System.currentTimeMillis();
+			
+			//////////////////////////////
+//			SAXParserFactory factory = SAXParserFactory.newInstance();
+//			  factory.setValidating(false);
+//			  factory.setNamespaceAware(true);
+//			  factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+//				factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+//			  SAXParser parser = factory.newSAXParser();
+////			  XMLReader reader = parser.getXMLReader();
+////			  reader.setEntityResolver(new EntityResolver() {
+////			   public InputSource resolveEntity(String pid, String sid) throws SAXException {
+////			    return new InputSource(new StringReader(""));
+////			   }
+////			  });
+//			  SAXHandler handler = new SAXHandler();
+//
+//			parser.parse(url.openStream(), handler);
+//			System.out.println(parser);
+			/////////////////////
+			/////---------------
+			XMLInputFactory factory = XMLInputFactory.newInstance();
+		    XMLStreamReader reader = factory.createXMLStreamReader(url.openStream());
+			
+		    Position position = null;
+		    String content = ""; 
+		    while(reader.hasNext()){
+		    	
+		    	int event = reader.next();
+		    	
+		    	switch (event) {
+				case XMLStreamConstants.START_ELEMENT:
+					if("pozycja".equals(reader.getLocalName())){
+						position = new Position();
+					}
+					
+					
+					break;
+				case XMLStreamConstants.CHARACTERS:
+			          content = reader.getText().trim();
+			          break;
+				case XMLStreamConstants.END_ELEMENT:
+			          switch(reader.getLocalName()){
+			            case "kod_waluty":
+//			            	System.out.println("start kod waluty");
+//			            	System.out.println(currency);
+			            	System.out.println(reader.getLocalName());
+//			            	System.out.println(content);
+			            	if(content.equals(currency.toString())){
+								position.setCurrency(currency);
+								System.out.println("waluta ok");
+							}
+							else {
+								continue;
+							}
+			              break;
+			            case "kurs_kupna":
+			            	if(position.getCurrency()!=null){
+			            		 position.setBuyRate(content);
+					              buyList2.add(Double.parseDouble(content.replace(",", ".")));
+			            	}
+			             
+			              break;
+			            case "kurs_sprzedazy":
+			            	if(position.getCurrency()!=null){
+			              position.setSellRate(content);
+			              sellList2.add(Double.parseDouble(content.replace(",", ".")));
+			              System.out.println("content" + content);
+			            	}
+			              break;
+			            
+			          }
+			          break;
+				}
+		    }
+
+		    
+			
+			
+			/////-----------------
+			
 			NodeList nodeList = document.getElementsByTagName("kod_waluty");
 			
 			long time1 = stop-start;
@@ -105,6 +202,14 @@ public class RateCalculator {
 			
 		}
 		
+	}
+
+	public List<Double> getBuyList2() {
+		return buyList2;
+	}
+
+	public List<Double> getSellList2() {
+		return sellList2;
 	}
 
 	public Double getAverage() {

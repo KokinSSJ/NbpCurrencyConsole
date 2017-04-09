@@ -43,7 +43,8 @@ public class MainClass {
 		System.out.println(rateCalculator.getBuyList2());
 		System.out.println(rateCalculator.getSellList());
 		System.out.println(rateCalculator.getSellList2());
-		
+		System.out.format("%.4f\n", rateCalculator.getAverage());
+		System.out.format("%.4f\n",rateCalculator.getStandardDeviation());
 
 //		RateCalculator.readValues(dirList.get(0), currency);
 //		RateCalculator.readValues("c034z020218", currency);

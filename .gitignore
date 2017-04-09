@@ -6,6 +6,3 @@ target/
 
 .README.md.html
 bin/
-src/AlexaSEO.java
-src/TestMainClass.java
-src/pl/parser/nbp/SAXHandler.java

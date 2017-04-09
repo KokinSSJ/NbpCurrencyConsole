@@ -2,6 +2,7 @@ package pl.parser.nbp;
 
 import java.io.BufferedReader;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,6 +24,8 @@ public class RateCalculator {
 	private  List<Double> sellList = new LinkedList<>();
 	private  List<Double> buyList2 = new LinkedList<>();
 	private  List<Double> sellList2 = new LinkedList<>();
+	
+	
 	public void readAll (List<String> xmlList, Currency currency){
 		
 		for(String s: xmlList){
@@ -51,65 +54,38 @@ public void readAllStAX (List<String> xmlList, Currency currency){
 	public  void  readValues(String xmlName, Currency currency){
 
 		URL url = null;
-
+		DocumentBuilderFactory dbf = null;
 		try {
 			
 			url = new URL(ParseNbp.nbpSite+xmlName+".xml");
-			
-			//method 1
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf = DocumentBuilderFactory.newInstance();
 			
 			//disable dtd
 			dbf.setValidating(false);
 			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			
 			DocumentBuilder dBuilder = dbf.newDocumentBuilder();
-//			start = System.currentTimeMillis();
 			Document document = dBuilder.parse(url.openStream(), "UTF-8"); // very time consuming!!!
-			
-//			dBuilder.
-//			stop = System.currentTimeMillis();
-//			long time1 = stop-start;
-//			System.out.println("odczyt danych: " + time1);
-
-			
-			
 			NodeList nodeList = document.getElementsByTagName("kod_waluty");
 			
-			
-//			start = System.currentTimeMillis();
-			
-			
-			
+			//search all nodeList
 			for(int i=0; i<nodeList.getLength();i++ ){
+				//if node with necessary Currency value
 				if(nodeList.item(i).getTextContent().equals(currency.name())){
-//					System.out.println(i + "  dzia³a");
+
 					String buyString = document.getElementsByTagName("kurs_kupna").item(i).getTextContent();
 					String sellString = document.getElementsByTagName("kurs_sprzedazy").item(i).getTextContent();
 					buyList.add(Double.parseDouble(buyString.replace(",", ".")));
 					sellList.add(Double.parseDouble(sellString.replace(",", ".")));
-//					System.out.println("buString " + buyString + " sellString " + sellString);
-
 					break;
 				}
-				else{
-//					System.out.println("nie dzia³a");
-				}
 			}
-//			stop = System.currentTimeMillis();
-//			long time2 = stop-start;
-//			System.out.println("petla for " + time2);
-			
-
 			
 		} catch(Exception ex){
 			System.out.println(ex.getMessage());
 		}
-		finally {//TODO close files?
-			
-		}
-		
 	}
+	
 	
 	//special parser for this exercise! -> 30% faster than standard DOM solution
 	public  void  readValuesStAX(String xmlName, Currency currency){
@@ -124,8 +100,7 @@ public void readAllStAX (List<String> xmlList, Currency currency){
 		    Double buyTemp = null; //zeruj
 	    	Double sellTemp = null;
 	    	Currency currTemp = null;
-		    
-		    	
+
 		    	while(reader.hasNext()){
 		    		
 		    		int event = reader.next();
@@ -146,6 +121,9 @@ public void readAllStAX (List<String> xmlList, Currency currency){
 					}
 					else if(XMLStreamConstants.CHARACTERS==event){
 						content = reader.getText().trim();
+//						if(content==null){
+//							content = "";
+//						}
 						
 					}
 					//new "pozycja" element -> new node for searching
@@ -173,6 +151,17 @@ public void readAllStAX (List<String> xmlList, Currency currency){
 		}
 		
 	}
+	
+	private Double calculateAverage(List<Double> list){
+		if(list.isEmpty()){
+			return 0.0;
+		}
+		Double result =0.0;
+		for(Double value : list){
+			result+=value;
+		}
+		return result/list.size();
+	}
 
 	public List<Double> getBuyList2() {
 		return buyList2;
@@ -183,10 +172,18 @@ public void readAllStAX (List<String> xmlList, Currency currency){
 	}
 
 	public Double getAverage() {
-		return average;
+		this.average = calculateAverage(buyList);
+		return this.average;
 	}
 
 	public Double getStandardDeviation() {
+		Double averageSell = calculateAverage(sellList); 
+		Double powerSum = 0.0;
+		for(Double sell : sellList){
+			powerSum += Math.pow(sell-averageSell, 2);
+		}
+		standardDeviation = Math.sqrt(powerSum/(sellList.size()));
+		
 		return standardDeviation;
 	}
 

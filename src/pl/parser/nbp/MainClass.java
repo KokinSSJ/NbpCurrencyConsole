@@ -32,6 +32,12 @@ public class MainClass {
 		rateCalculator.readAll(dirList, currency);
 		stop = System.currentTimeMillis();
 		long time2 = stop-start;
+		
+		start = System.currentTimeMillis();
+		rateCalculator.readAllStAX(dirList, currency);
+		stop = System.currentTimeMillis();
+		long time3 = stop-start;
+		
 		rateCalculator.getAverage();
 		System.out.println(rateCalculator.getBuyList());
 		System.out.println(rateCalculator.getBuyList2());
@@ -44,6 +50,7 @@ public class MainClass {
 		
 		System.out.println("Time download dir: " + time);
 		System.out.println("Time retrieve xml: " + time2);
+		System.out.println("Time retrieve xml: " + time3);
 		
 		System.out.println("dirset" + dirList);
 		System.out.println("ilosc parsow " +  dirList.size());

@@ -1,81 +1,39 @@
 package pl.parser.nbp;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
+/**
+ *  Calculate average buying rate and standard deviation for selling rate
+ *  Used NBP web -> http://www.nbp.pl/home.aspx?f=/kursy/instrukcja_pobierania_kursow_walut.html
+ *  without using NBP API
+ *  
+ *  
+ * 		//Input format 'Currency' 'DateStart' 'DateStop'
+ *		//ex. EUR 2013-01-28 2013-01-31
+ *		OUTPUT -> 4.1505 0.0125
+ *
+ * @author Dominik Bogacki
+ *
+ */
 public class MainClass {
 	
-	private static LocalDate dateStart;
-	private static LocalDate dateStop;
-
 	public static void main(String[] args) {
 		//Input format 'Currency' 'DateStart' 'DateStop'
 		//ex. EUR 2013-01-28 2013-01-31
 		
-		long start, stop;
-		start = System.currentTimeMillis();
-		Currency currency = getCurrency(args[0]);
-		dateStart = LocalDate.parse(args[1]);
-		dateStop = LocalDate.parse(args[2]);
-		
+		Currency currency = Currency.valueOf(args[0]);
+		LocalDate dateStart = LocalDate.parse(args[1]);
+		LocalDate dateStop = LocalDate.parse(args[2]);
 		checkDates(dateStart, dateStop);
-		
-		List<String> dirList = ParseNbp.getDirSet(dateStart, dateStop);
-		stop = System.currentTimeMillis();
-		long time = stop - start;
-		System.out.println("--------------------------");
-		RateCalculator rateCalculator = new RateCalculator();
-//		rateCalculator.readAll(dirList, currency);
-//		rateCalculator.readValues("c034z020218", currency);
-		start = System.currentTimeMillis();
-		rateCalculator.readAll(dirList, currency);
-		stop = System.currentTimeMillis();
-		long time2 = stop-start;
-		
-		start = System.currentTimeMillis();
-		rateCalculator.readAllStAX(dirList, currency);
-		stop = System.currentTimeMillis();
-		long time3 = stop-start;
-		
-		rateCalculator.getAverage();
-		System.out.println(rateCalculator.getBuyList());
-		System.out.println(rateCalculator.getBuyList2());
-		System.out.println(rateCalculator.getSellList());
-		System.out.println(rateCalculator.getSellList2());
-		System.out.format("%.4f\n", rateCalculator.getAverage());
-		System.out.format("%.4f\n",rateCalculator.getStandardDeviation());
 
-//		RateCalculator.readValues(dirList.get(0), currency);
-//		RateCalculator.readValues("c034z020218", currency);
-		
-		System.out.println("Time download dir: " + time);
-		System.out.println("Time retrieve xml: " + time2);
-		System.out.println("Time retrieve xml: " + time3);
-		
-		System.out.println("dirset" + dirList);
-		System.out.println("ilosc parsow " +  dirList.size());
-		System.out.println(currency.valueOf("EUR") + " " + LocalDateTime.now());
-		System.out.println("dateStart: " + dateStart);
-		System.out.println("dateStop: " + dateStop);
-		
+		RateCalculator rateCalculator = new RateCalculator(currency, dateStart, dateStop);
+
+		System.out.format("%.4f\n", rateCalculator.getAverageBuy());
+		System.out.format("%.4f\n",rateCalculator.getStandardDeviationSell());
+
 	}
 	
 	
-	private static Currency getCurrency(String string){
-		switch (string) {
-		case "EUR":
-			return Currency.EUR;
-		case "USD":
-			return Currency.USD;
-		case "GBP":
-			return Currency.GBP;
-		case "CHF":
-			return Currency.CHF;
-		default:
-			throw new IllegalArgumentException("Illegal Currency - not recognized");
-		}
-	}
+	
 	
 	private static void checkDates(LocalDate dateStart, LocalDate dateStop){
 		
@@ -98,13 +56,11 @@ public class MainClass {
 			throw new IllegalArgumentException("DateStop is to far, NBP has data from " + dateBase);
 		}
 		
-		//set to 2002-01-01 if someone enter older dateStart!
+		//if dateStart is older than 2002-01-01
 		if(dateStart.isBefore(dateBase)){
-			System.out.println("DateStart has been change to " + dateBase + " -> min value");
-			MainClass.dateStart = dateBase;
+			throw new IllegalArgumentException("DateStart has been change to " + dateBase + " -> min value");
 		}
 		
-		//NBP support XML from
 	}
 	
 }
